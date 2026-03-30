@@ -1,0 +1,3237 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Encuestas — Escuela de Aviacion PANAL</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #1B3A5C 0%, #2a5080 100%);
+            color: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            flex: 1;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .header-subtitle {
+            font-size: 12px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(40,167,69,0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(220,53,69,0.3);
+        }
+
+        /* Source Bar */
+        .source-bar {
+            background: white;
+            padding: 12px 30px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+        }
+
+        .source-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .source-indicator.live {
+            background: #28a745;
+            box-shadow: 0 0 8px rgba(40,167,69,0.5);
+        }
+
+        .source-indicator.demo {
+            background: #ffc107;
+            box-shadow: 0 0 8px rgba(255,193,7,0.5);
+        }
+
+        .source-indicator.error {
+            background: #dc3545;
+            box-shadow: 0 0 8px rgba(220,53,69,0.5);
+        }
+
+        .source-text {
+            flex: 1;
+            color: #666;
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background: #f0f4f8;
+            padding: 10px 30px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .filter-row-top {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #1B3A5C;
+            white-space: nowrap;
+        }
+
+        .filter-quick-buttons {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .filter-chip {
+            padding: 5px 14px;
+            border: 1px solid #c0cad5;
+            border-radius: 20px;
+            background: white;
+            color: #555;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-chip:hover {
+            background: #e8edf2;
+            border-color: #1B3A5C;
+            color: #1B3A5C;
+        }
+
+        .filter-chip.active {
+            background: #1B3A5C;
+            color: white;
+            border-color: #1B3A5C;
+        }
+
+        .filter-row-dates {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            padding: 8px 0 2px 0;
+        }
+
+        .filter-field {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #555;
+            font-size: 13px;
+        }
+
+        .filter-field input[type="date"] {
+            padding: 6px 10px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 13px;
+            background: white;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .filter-field input[type="date"]:focus {
+            outline: none;
+            border-color: #1B3A5C;
+            box-shadow: 0 0 0 2px rgba(27,58,92,0.15);
+        }
+
+        .filter-apply-btn {
+            padding: 6px 18px;
+            border: none;
+            border-radius: 6px;
+            background: #1B3A5C;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .filter-apply-btn:hover {
+            background: #2a5580;
+        }
+
+        .filter-status {
+            font-size: 12px;
+            color: #1B3A5C;
+            font-weight: 600;
+            padding-left: 2px;
+        }
+
+        .filter-status.active {
+            color: #C8A951;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            background: white;
+            border-bottom: 2px solid #C8A951;
+            padding: 0 30px;
+            gap: 0;
+        }
+
+        .tab {
+            padding: 16px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            position: relative;
+            margin-bottom: -2px;
+        }
+
+        .tab:hover {
+            color: #1B3A5C;
+        }
+
+        .tab.active {
+            color: #1B3A5C;
+            border-bottom-color: #C8A951;
+        }
+
+        .tab-count {
+            background: #C8A951;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 6px;
+            font-weight: 700;
+        }
+
+        /* Content */
+        .content {
+            padding: 30px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* KPI Cards */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #C8A951;
+        }
+
+        .kpi-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1B3A5C;
+            line-height: 1;
+        }
+
+        .kpi-subtext {
+            font-size: 12px;
+            color: #999;
+            margin-top: 6px;
+        }
+
+        /* Charts Grid */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            position: relative;
+            height: 400px;
+        }
+
+        .chart-container.full {
+            grid-column: 1 / -1;
+        }
+
+        .chart-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1B3A5C;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .chart-canvas {
+            position: relative;
+            height: calc(100% - 40px);
+        }
+
+        /* Insights Section */
+        .insights-section {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .insights-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1B3A5C;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .insight-card {
+            border-left: 3px solid #28a745;
+            padding-left: 15px;
+        }
+
+        .insight-card.negative {
+            border-left-color: #dc3545;
+        }
+
+        .insight-label {
+            font-size: 11px;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .insight-items {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .insight-item {
+            padding: 4px 0;
+        }
+
+        .insight-number {
+            color: #1B3A5C;
+            font-weight: 600;
+        }
+
+        /* Accordion */
+        .accordion {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .accordion-item {
+            border-bottom: 1px solid #eee;
+        }
+
+        .accordion-item:last-child {
+            border-bottom: none;
+        }
+
+        .accordion-header {
+            padding: 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f9f9f9;
+            font-weight: 600;
+            color: #1B3A5C;
+            transition: background 0.2s;
+        }
+
+        .accordion-header:hover {
+            background: #f0f0f0;
+        }
+
+        .accordion-header.active {
+            background: #f0f8ff;
+            color: #C8A951;
+        }
+
+        .accordion-icon {
+            transition: transform 0.2s;
+            font-size: 18px;
+        }
+
+        .accordion-header.active .accordion-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            display: none;
+            padding: 20px;
+            background: white;
+        }
+
+        .accordion-content.active {
+            display: block;
+        }
+
+        .section-content {
+            margin-bottom: 20px;
+        }
+
+        .section-content:last-child {
+            margin-bottom: 0;
+        }
+
+        .question-group {
+            margin-bottom: 24px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .question-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .question-label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1B3A5C;
+            margin-bottom: 4px;
+            line-height: 1.5;
+        }
+
+        .question-type-hint {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+
+        .question-summary {
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .question-summary .avg-score {
+            color: #1B3A5C;
+            font-size: 16px;
+        }
+
+        /* Scale/Likert visualization */
+        .scale-container {
+            margin-top: 6px;
+        }
+
+        .scale-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        .scale-row-label {
+            width: 180px;
+            min-width: 180px;
+            color: #555;
+            font-size: 12px;
+            text-align: right;
+            padding-right: 12px;
+        }
+
+        .scale-row-bar-wrapper {
+            flex: 1;
+            height: 22px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .scale-row-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+            min-width: 2px;
+        }
+
+        .scale-row-value {
+            width: 70px;
+            min-width: 70px;
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+            padding-left: 8px;
+        }
+
+        /* Multiple choice visualization */
+        .mc-list {
+            margin-top: 6px;
+        }
+
+        .mc-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .mc-row-label {
+            width: 240px;
+            min-width: 240px;
+            color: #333;
+            font-size: 13px;
+            padding-right: 12px;
+        }
+
+        .mc-row-bar-wrapper {
+            flex: 1;
+            height: 20px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .mc-row-bar {
+            height: 100%;
+            background: #C8A951;
+            border-radius: 4px;
+            transition: width 0.3s;
+            min-width: 2px;
+        }
+
+        .mc-row-bar.top {
+            background: #1B3A5C;
+        }
+
+        .mc-row-value {
+            width: 90px;
+            min-width: 90px;
+            text-align: right;
+            font-size: 12px;
+            color: #666;
+            padding-left: 8px;
+        }
+
+        .mc-total {
+            font-size: 11px;
+            color: #999;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        /* Open-ended responses */
+        .open-text-container {
+            margin-top: 6px;
+        }
+
+        .open-text-label {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 6px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .open-text {
+            background: #f9f9f9;
+            padding: 10px 14px;
+            border-radius: 4px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #555;
+            font-style: italic;
+            border-left: 3px solid #C8A951;
+            margin-bottom: 8px;
+        }
+
+        .open-text:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Comparison Section */
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+
+        .comparison-table th {
+            background: #f0f0f0;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #1B3A5C;
+            border-bottom: 2px solid #C8A951;
+        }
+
+        .comparison-table td {
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            color: #333;
+        }
+
+        .comparison-table tr:hover {
+            background: #f9f9f9;
+        }
+
+        .comparison-value {
+            font-weight: 600;
+            color: #1B3A5C;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            color: white;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 14px;
+        }
+
+        /* ========== RESPONSIVE ========== */
+
+        /* Tablet */
+        @media (max-width: 1024px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch;
+                padding: 16px;
+            }
+            .header-title {
+                font-size: 20px;
+            }
+            .header-subtitle {
+                font-size: 10px;
+            }
+            .header-buttons {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 8px;
+                width: 100%;
+            }
+            .btn {
+                justify-content: center;
+                padding: 10px 8px;
+                font-size: 11px;
+            }
+            .source-bar {
+                padding: 10px 16px;
+                font-size: 11px;
+            }
+            .filter-bar {
+                padding: 10px 16px;
+            }
+            .filter-label {
+                font-size: 12px;
+            }
+            .filter-quick-buttons {
+                gap: 4px;
+            }
+            .filter-chip {
+                padding: 4px 10px;
+                font-size: 11px;
+            }
+            .filter-row-dates {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 8px;
+            }
+            .filter-field {
+                width: 100%;
+            }
+            .filter-field input[type="date"] {
+                flex: 1;
+            }
+            .filter-apply-btn {
+                width: 100%;
+                padding: 10px;
+            }
+            .tabs {
+                padding: 0;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .tab {
+                padding: 12px 14px;
+                font-size: 12px;
+                white-space: nowrap;
+            }
+            .tab-count {
+                font-size: 10px;
+                padding: 1px 6px;
+            }
+            .content {
+                padding: 16px;
+            }
+            .kpi-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 12px;
+                margin-bottom: 20px;
+            }
+            .kpi-card {
+                padding: 14px;
+            }
+            .kpi-label {
+                font-size: 10px;
+            }
+            .kpi-value {
+                font-size: 24px;
+            }
+            .kpi-subtext {
+                font-size: 10px;
+            }
+            .charts-grid {
+                gap: 16px;
+                margin-bottom: 20px;
+            }
+            .chart-container {
+                height: 280px;
+                padding: 14px;
+            }
+            .chart-title {
+                font-size: 12px;
+                margin-bottom: 10px;
+            }
+            .insights-section {
+                padding: 14px;
+                margin-bottom: 20px;
+            }
+            .insights-grid {
+                grid-template-columns: 1fr;
+                gap: 14px;
+            }
+            .insights-title {
+                font-size: 12px;
+            }
+            .insight-items {
+                font-size: 12px;
+            }
+            /* Barras de escala en movil */
+            .scale-row {
+                flex-wrap: wrap;
+                margin-bottom: 10px;
+            }
+            .scale-row-label {
+                width: 100%;
+                min-width: unset;
+                text-align: left;
+                padding-right: 0;
+                margin-bottom: 4px;
+                font-size: 11px;
+                font-weight: 600;
+            }
+            .scale-row-bar-wrapper {
+                flex: 1;
+            }
+            .scale-row-value {
+                width: 55px;
+                min-width: 55px;
+                font-size: 11px;
+            }
+            /* Multiple choice en movil */
+            .mc-row {
+                flex-wrap: wrap;
+                margin-bottom: 10px;
+            }
+            .mc-row-label {
+                width: 100%;
+                min-width: unset;
+                padding-right: 0;
+                margin-bottom: 4px;
+                font-size: 12px;
+                font-weight: 600;
+            }
+            .mc-row-value {
+                width: 55px;
+                min-width: 55px;
+                font-size: 11px;
+            }
+            /* Acordeon */
+            .accordion-header {
+                padding: 12px;
+                font-size: 13px;
+            }
+            .accordion-content {
+                padding: 14px;
+            }
+            .question-label {
+                font-size: 13px;
+            }
+            /* Tabla comparativa */
+            .comparison-table {
+                font-size: 11px;
+            }
+            .comparison-table th,
+            .comparison-table td {
+                padding: 8px 6px;
+            }
+            .comparison-item {
+                padding: 14px;
+            }
+            .comparison-item-title {
+                font-size: 12px;
+            }
+            .conclusion-text {
+                font-size: 12px;
+            }
+        }
+
+        /* Small phones */
+        @media (max-width: 420px) {
+            .header {
+                padding: 12px;
+            }
+            .header-title {
+                font-size: 17px;
+            }
+            .header-buttons {
+                grid-template-columns: 1fr 1fr 1fr;
+                gap: 6px;
+            }
+            .btn {
+                padding: 8px 4px;
+                font-size: 10px;
+            }
+            .kpi-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+            .chart-container {
+                height: 240px;
+            }
+            .filter-quick-buttons {
+                display: grid;
+                grid-template-columns: 1fr 1fr 1fr;
+                width: 100%;
+            }
+            .filter-chip {
+                text-align: center;
+                padding: 6px 4px;
+                font-size: 10px;
+            }
+            .tab {
+                padding: 10px 10px;
+                font-size: 11px;
+            }
+        }
+
+        /* Hidden File Inputs */
+        .hidden-input {
+            display: none;
+        }
+
+        /* Comparison Sections */
+        .comparison-item {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .comparison-item-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1B3A5C;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .conclusion-text {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #555;
+            margin-bottom: 12px;
+        }
+
+        .conclusion-highlight {
+            color: #1B3A5C;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Cargando datos...</div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <div class="header-title">Dashboard de Encuestas</div>
+            <div class="header-subtitle">Escuela de Aviacion PANAL</div>
+        </div>
+        <div class="header-buttons">
+            <button class="btn btn-primary" onclick="refreshData()" title="Cargar datos de Google Sheets">
+                🔄 Actualizar Datos
+            </button>
+            <button class="btn btn-secondary" onclick="loadDemoData()" title="Generar datos de demostración">
+                📊 Datos Demo
+            </button>
+            <button class="btn btn-danger" onclick="clearData()" title="Eliminar todos los datos">
+                🗑 Limpiar
+            </button>
+        </div>
+    </div>
+
+    <!-- Source Bar -->
+    <div class="source-bar">
+        <span class="source-indicator" id="sourceIndicator"></span>
+        <div class="source-text" id="sourceText">Cargando...</div>
+    </div>
+
+    <!-- Date Filter Bar -->
+    <div class="filter-bar" id="filterBar">
+        <div class="filter-row-top">
+            <div class="filter-label">📅 Periodo:</div>
+            <div class="filter-quick-buttons">
+                <button class="filter-chip active" onclick="setQuickFilter('all')">Todo</button>
+                <button class="filter-chip" onclick="setQuickFilter('thisMonth')">Este mes</button>
+                <button class="filter-chip" onclick="setQuickFilter('lastMonth')">Mes anterior</button>
+                <button class="filter-chip" onclick="setQuickFilter('last3')">3 meses</button>
+                <button class="filter-chip" onclick="setQuickFilter('last6')">6 meses</button>
+                <button class="filter-chip" onclick="setQuickFilter('thisYear')">Este a&ntilde;o</button>
+                <button class="filter-chip" onclick="setQuickFilter('custom')">Personalizado</button>
+            </div>
+        </div>
+        <div class="filter-row-dates" id="customDateRow" style="display:none;">
+            <label class="filter-field">
+                Desde
+                <input type="date" id="filterFrom">
+            </label>
+            <label class="filter-field">
+                Hasta
+                <input type="date" id="filterTo">
+            </label>
+            <button class="filter-apply-btn" onclick="applyDateFilter()">Aplicar</button>
+        </div>
+        <div class="filter-status" id="filterStatus"></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('students')">
+            Alumnos Actuales
+            <span class="tab-count" id="studentCount">0</span>
+        </button>
+        <button class="tab" onclick="switchTab('alumni')">
+            Exalumnos
+            <span class="tab-count" id="alumniCount">0</span>
+        </button>
+        <button class="tab" onclick="switchTab('comparison')">
+            Comparativo
+        </button>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+        <!-- Students Tab -->
+        <div class="tab-content active" id="studentsTab">
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">Total de Respuestas</div>
+                    <div class="kpi-value" id="studentTotalResponses">0</div>
+                    <div class="kpi-subtext">alumnos encuestados</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Satisfacción General</div>
+                    <div class="kpi-value" id="studentSatisfaction">0.0</div>
+                    <div class="kpi-subtext">de 5 puntos</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">NPS Score</div>
+                    <div class="kpi-value" id="studentNPS">0</div>
+                    <div class="kpi-subtext">Probabilidad de recomendar PANAL (0-10)</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">% Promotores</div>
+                    <div class="kpi-value" id="studentPromoters">0%</div>
+                    <div class="kpi-subtext">calificaron 9 o 10 en recomendación</div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">Satisfacción Promedio por Dimensión (Escala 1-5)</div>
+                    <div class="chart-canvas">
+                        <canvas id="studentDimensionChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Distribución NPS — ¿Qué tan probable es que recomiendes PANAL? (0-10)</div>
+                    <div class="chart-canvas">
+                        <canvas id="studentNPSChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">Radar de Dimensiones — Vista comparativa de todas las áreas evaluadas</div>
+                    <div class="chart-canvas">
+                        <canvas id="studentRadarChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Experiencia General del Alumno (1 = Muy malo, 5 = Excelente)</div>
+                    <div class="chart-canvas">
+                        <canvas id="studentLikertChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insights-section">
+                <div class="insights-title">Principales Fortalezas y Áreas de Mejora</div>
+                <div class="question-type-hint" style="margin-top:-10px; margin-bottom:12px;">Se comparan los promedios de satisfacción (escala 1-5) de cada dimensión evaluada. Las 3 dimensiones con mejor puntaje son fortalezas, y las 3 con menor puntaje son áreas de oportunidad.</div>
+                <div class="insights-grid">
+                    <div class="insight-card">
+                        <div class="insight-label">Top 3 Fortalezas (mejor evaluadas)</div>
+                        <div class="insight-items" id="studentStrengths">
+                            <div class="insight-item">Cargando...</div>
+                        </div>
+                    </div>
+                    <div class="insight-card negative">
+                        <div class="insight-label">Top 3 Áreas de Mejora (menor evaluadas)</div>
+                        <div class="insight-items" id="studentImprovements">
+                            <div class="insight-item">Cargando...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion" id="studentAccordion"></div>
+        </div>
+
+        <!-- Alumni Tab -->
+        <div class="tab-content" id="alumniTab">
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">Total de Respuestas</div>
+                    <div class="kpi-value" id="alumniTotalResponses">0</div>
+                    <div class="kpi-subtext">exalumnos encuestados</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">Satisfacción General</div>
+                    <div class="kpi-value" id="alumniSatisfaction">0.0</div>
+                    <div class="kpi-subtext">de 5 puntos</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">NPS Score</div>
+                    <div class="kpi-value" id="alumniNPS">0</div>
+                    <div class="kpi-subtext">Probabilidad de recomendar PANAL (0-10)</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">% Promotores</div>
+                    <div class="kpi-value" id="alumniPromoters">0%</div>
+                    <div class="kpi-subtext">calificaron 9 o 10 en recomendación</div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">Satisfacción Promedio por Dimensión (Escala 1-5)</div>
+                    <div class="chart-canvas">
+                        <canvas id="alumniDimensionChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Distribución NPS — ¿Qué tan probable es que recomiendes PANAL? (0-10)</div>
+                    <div class="chart-canvas">
+                        <canvas id="alumniNPSChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">Radar de Dimensiones — Vista comparativa de todas las áreas evaluadas</div>
+                    <div class="chart-canvas">
+                        <canvas id="alumniRadarChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">Experiencia General del Exalumno (1 = Muy malo, 5 = Excelente)</div>
+                    <div class="chart-canvas">
+                        <canvas id="alumniLikertChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insights-section">
+                <div class="insights-title">Principales Fortalezas y Áreas de Mejora</div>
+                <div class="question-type-hint" style="margin-top:-10px; margin-bottom:12px;">Se comparan los promedios de satisfacción (escala 1-5) de cada dimensión evaluada. Las 3 dimensiones con mejor puntaje son fortalezas, y las 3 con menor puntaje son áreas de oportunidad.</div>
+                <div class="insights-grid">
+                    <div class="insight-card">
+                        <div class="insight-label">Top 3 Fortalezas (mejor evaluadas)</div>
+                        <div class="insight-items" id="alumniStrengths">
+                            <div class="insight-item">Cargando...</div>
+                        </div>
+                    </div>
+                    <div class="insight-card negative">
+                        <div class="insight-label">Top 3 Áreas de Mejora (menor evaluadas)</div>
+                        <div class="insight-items" id="alumniImprovements">
+                            <div class="insight-item">Cargando...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="accordion" id="alumniAccordion"></div>
+        </div>
+
+        <!-- Comparison Tab -->
+        <div class="tab-content" id="comparisonTab">
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-label">NPS Alumnos Actuales</div>
+                    <div class="kpi-value" id="compareStudentNPS">0</div>
+                    <div class="kpi-subtext">Probabilidad de recomendar PANAL (0-10)</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-label">NPS Exalumnos</div>
+                    <div class="kpi-value" id="compareAlumniNPS">0</div>
+                    <div class="kpi-subtext">Probabilidad de recomendar PANAL (0-10)</div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container full">
+                    <div class="chart-title">Comparación de Distribución NPS — ¿Qué tan probable es que recomiendes PANAL? (0-10)</div>
+                    <div class="chart-canvas">
+                        <canvas id="comparisonNPSChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="comparison-item">
+                <div class="comparison-item-title">Resumen Comparativo</div>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Métrica</th>
+                            <th>Alumnos</th>
+                            <th>Exalumnos</th>
+                            <th>Diferencia</th>
+                        </tr>
+                    </thead>
+                    <tbody id="comparisonTableBody">
+                        <tr>
+                            <td colspan="4" style="text-align: center; color: #999;">Cargando datos...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container full">
+                    <div class="chart-title">Tendencia de Satisfacción General en el Tiempo (Escala 1-5)</div>
+                    <div class="chart-canvas">
+                        <canvas id="trendSatisfactionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container full">
+                    <div class="chart-title">Tendencia de NPS en el Tiempo (Escala 0-10)</div>
+                    <div class="chart-canvas">
+                        <canvas id="trendNPSChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="comparison-item">
+                <div class="comparison-item-title">Análisis Comparativo</div>
+                <div class="conclusion-text" id="comparisonConclusion">
+                    Cargando análisis...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden File Inputs -->
+    <input type="file" id="studentCSVInput" class="hidden-input" accept=".csv" onchange="handleStudentCSVImport(event)">
+    <input type="file" id="alumniCSVInput" class="hidden-input" accept=".csv" onchange="handleAlumniCSVImport(event)">
+
+    <script>
+        // ============================================================================
+        // CONFIGURATION
+        // ============================================================================
+
+        const CONFIG = {
+            STUDENT_SHEET_ID: '1PWg1NdiMMHcJ8lNVqBzTClIHaY_f2Hz4szYZV9J5Ps0',
+            STUDENT_GID: '1650888571',
+            ALUMNI_SHEET_ID: '1bgmwjmFEwYzxhkIrg_gk5pwY1EulVKeonI9LQb3Lg7g',
+            ALUMNI_GID: '354562009',
+            WEB_APP_URL: 'https://script.google.com/macros/s/AKfycbzmtswgBwGDm3qAFkrweujTKpUf3DRGVQwjnNqABRGIPA1s8lGsj2afxV2jqq8WGUsQfw/exec',
+            AUTO_REFRESH_INTERVAL: 5 * 60 * 1000,
+            COLORS: {
+                navy: '#1B3A5C',
+                gold: '#C8A951',
+                green: '#28a745',
+                red: '#dc3545',
+                blue: '#007bff'
+            }
+        };
+
+        // ============================================================================
+        // DATA STRUCTURES
+        // ============================================================================
+
+        let globalState = {
+            studentData: [],
+            alumniData: [],
+            dataSource: 'loading',
+            lastUpdate: null,
+            autoRefreshTimer: null,
+            filterFrom: null,  // 'YYYY-MM' or null
+            filterTo: null     // 'YYYY-MM' or null
+        };
+
+        // ============================================================================
+        // DATE FILTERING
+        // ============================================================================
+
+        function parseTimestamp(ts) {
+            if (!ts) return null;
+            if (ts instanceof Date) return ts;
+            var d = new Date(ts);
+            if (!isNaN(d.getTime())) return d;
+            // Formato Google Sheets: "3/15/2026 14:30:00"
+            var parts = String(ts).match(/(\d+)\/(\d+)\/(\d+)/);
+            if (parts) return new Date(parts[3], parts[1] - 1, parts[2]);
+            return null;
+        }
+
+        function filterByDate(dataArray) {
+            if (!globalState.filterFrom && !globalState.filterTo) return dataArray;
+            var fromDate = globalState.filterFrom ? new Date(globalState.filterFrom + 'T00:00:00') : null;
+            var toDate = globalState.filterTo ? new Date(globalState.filterTo + 'T23:59:59') : null;
+
+            return dataArray.filter(function(row) {
+                var d = parseTimestamp(row.timestamp);
+                if (!d) return false;
+                if (fromDate && d < fromDate) return false;
+                if (toDate && d > toDate) return false;
+                return true;
+            });
+        }
+
+        function getStudentData() {
+            return filterByDate(globalState.studentData);
+        }
+
+        function getAlumniData() {
+            return filterByDate(globalState.alumniData);
+        }
+
+        function setQuickFilter(preset) {
+            var now = new Date();
+            var from = null;
+            var to = null;
+
+            // Resaltar chip activo
+            document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
+            event.target.classList.add('active');
+
+            var customRow = document.getElementById('customDateRow');
+
+            if (preset === 'all') {
+                customRow.style.display = 'none';
+                globalState.filterFrom = null;
+                globalState.filterTo = null;
+                document.getElementById('filterFrom').value = '';
+                document.getElementById('filterTo').value = '';
+                updateFilterStatus();
+                updateUI();
+                return;
+            }
+
+            if (preset === 'custom') {
+                customRow.style.display = 'flex';
+                return;
+            }
+
+            customRow.style.display = 'none';
+
+            if (preset === 'thisMonth') {
+                from = new Date(now.getFullYear(), now.getMonth(), 1);
+                to = now;
+            } else if (preset === 'lastMonth') {
+                from = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+                to = new Date(now.getFullYear(), now.getMonth(), 0);
+            } else if (preset === 'last3') {
+                from = new Date(now.getFullYear(), now.getMonth() - 3, now.getDate());
+                to = now;
+            } else if (preset === 'last6') {
+                from = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
+                to = now;
+            } else if (preset === 'thisYear') {
+                from = new Date(now.getFullYear(), 0, 1);
+                to = now;
+            }
+
+            var fromStr = from.toISOString().split('T')[0];
+            var toStr = to.toISOString().split('T')[0];
+
+            document.getElementById('filterFrom').value = fromStr;
+            document.getElementById('filterTo').value = toStr;
+            globalState.filterFrom = fromStr;
+            globalState.filterTo = toStr;
+            updateFilterStatus();
+            updateUI();
+        }
+
+        function applyDateFilter() {
+            var fromVal = document.getElementById('filterFrom').value;
+            var toVal = document.getElementById('filterTo').value;
+            globalState.filterFrom = fromVal || null;
+            globalState.filterTo = toVal || null;
+
+            // Desmarcar chips y marcar "Personalizado"
+            document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
+            var chips = document.querySelectorAll('.filter-chip');
+            chips[chips.length - 1].classList.add('active'); // ultimo = Personalizado
+
+            updateFilterStatus();
+            updateUI();
+        }
+
+        function clearDateFilter() {
+            setQuickFilter('all');
+            // Remarcar "Todo"
+            document.querySelectorAll('.filter-chip').forEach(function(c) { c.classList.remove('active'); });
+            document.querySelector('.filter-chip').classList.add('active');
+        }
+
+        function formatDateShort(dateStr) {
+            if (!dateStr) return '';
+            var d = new Date(dateStr + 'T00:00:00');
+            return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+        }
+
+        function updateFilterStatus() {
+            var status = document.getElementById('filterStatus');
+            if (!globalState.filterFrom && !globalState.filterTo) {
+                status.textContent = 'Mostrando todos los datos';
+                status.className = 'filter-status';
+            } else {
+                var students = getStudentData().length;
+                var alumni = getAlumniData().length;
+                var range = '';
+                if (globalState.filterFrom && globalState.filterTo) {
+                    range = formatDateShort(globalState.filterFrom) + '  —  ' + formatDateShort(globalState.filterTo);
+                } else if (globalState.filterFrom) {
+                    range = 'desde ' + formatDateShort(globalState.filterFrom);
+                } else {
+                    range = 'hasta ' + formatDateShort(globalState.filterTo);
+                }
+                status.textContent = range + '  |  ' + students + ' alumnos, ' + alumni + ' exalumnos';
+                status.className = 'filter-status active';
+            }
+        }
+
+        const STUDENT_SECTIONS = [
+            { id: 's1', name: 'Datos Generales', short: 'General', questions: [1, 2, 3, 4, 5] },
+            { id: 's2', name: 'Proceso de Inscripción', short: 'Inscripción', questions: [6, 7, 8, 9] },
+            { id: 's3', name: 'Calidad de Instrucción', short: 'Instrucción', questions: [10, 11, 12, 13, 14, 15] },
+            { id: 's4', name: 'Equipos y Recursos', short: 'Equipos', questions: [16, 17, 18, 19, 20] },
+            { id: 's5', name: 'Atención Administrativa', short: 'Admin', questions: [21, 22, 23, 24] },
+            { id: 's6', name: 'Infraestructura y Ambiente', short: 'Infraestructura', questions: [25, 26, 27, 28] },
+            { id: 's7', name: 'Valoración General', short: 'Valoración', questions: [29, 30, 31, 32] }
+        ];
+
+        const ALUMNI_SECTIONS = [
+            { id: 'a1', name: 'Perfil del Exalumno', short: 'Perfil', questions: [1, 2, 3, 4, 5] },
+            { id: 'a2', name: 'Situación Profesional', short: 'Profesional', questions: [6, 7, 8, 9, 10] },
+            { id: 'a3', name: 'Evaluación Retrospectiva', short: 'Retrospectiva', questions: [11, 12, 13, 14, 15, 16] },
+            { id: 'a4', name: 'Valoración General', short: 'Valoración', questions: [17, 18, 19, 20, 21] }
+        ];
+
+        const SCALE_QUESTIONS = {
+            students: [6, 7, 8, 10, 11, 12, 13, 14, 16, 17, 18, 19, 21, 22, 23, 25, 26, 27, 30],
+            alumni: [9, 11, 12, 13, 14, 19]
+        };
+
+        const NPS_QUESTIONS = {
+            students: 29,
+            alumni: 17
+        };
+
+        // Preguntas que usan escala de calificación "Muy malo → Excelente" (en vez de "Muy en desacuerdo → Muy de acuerdo")
+        const RATING_SCALE_QUESTIONS = {
+            students: [16, 17, 25, 30],
+            alumni: [19]
+        };
+
+        const STUDENT_QUESTIONS = {
+            1: '¿Cuál es tu rango de edad?',
+            2: '¿Cuál es tu país de origen?',
+            3: '¿Qué licencia estás cursando actualmente?',
+            4: '¿Cuánto tiempo llevas como alumno en PANAL?',
+            5: '¿Cómo conociste a PANAL?',
+            6: 'Cuando llegué a PANAL por primera vez, me sentí bien atendido(a) y orientado(a).',
+            7: 'La información sobre costos, requisitos y programa fue clara y completa.',
+            8: 'El proceso de inscripción y trámites fue ágil y organizado.',
+            9: '¿Cuál fue el factor más importante en tu decisión de elegir PANAL?',
+            10: 'Los instructores de vuelo demuestran dominio técnico y profesionalismo.',
+            11: 'Los instructores son pacientes y se adaptan a mi ritmo de aprendizaje.',
+            12: 'Las clases teóricas son claras, organizadas y bien preparadas.',
+            13: 'El material didáctico (manuales, guías, recursos) es adecuado y actualizado.',
+            14: 'Siento que estoy progresando al ritmo que esperaba en mi formación.',
+            15: 'Si pudieras mejorar UNA cosa de la instrucción, ¿qué sería?',
+            16: '¿Cómo calificarías el estado general de los aviones de entrenamiento?',
+            17: '¿Cómo calificarías tu experiencia con el simulador Redbird MCX?',
+            18: 'Consigo agendar mis horas de vuelo sin dificultad ni largas esperas.',
+            19: 'La disponibilidad de aviones rara vez retrasa mi avance.',
+            20: '¿Con qué frecuencia se te ha cancelado o reprogramado un vuelo por mantenimiento?',
+            21: 'El personal administrativo responde mis consultas de forma rápida y amable.',
+            22: 'Los procesos de pago y facturación son claros y fáciles.',
+            23: 'Me mantienen informado(a) sobre cambios en horarios, programas o regulaciones.',
+            24: '¿Cuál es tu canal preferido para comunicarte con la escuela?',
+            25: '¿Cómo calificarías las instalaciones generales de PANAL? (aulas, hangar, baños, áreas comunes)',
+            26: 'Me siento cómodo(a) y seguro(a) en las instalaciones de la escuela.',
+            27: 'El ambiente entre compañeros e instructores es motivador y profesional.',
+            28: '¿Qué mejorarías de las instalaciones físicas? (puedes marcar más de una)',
+            29: 'Del 0 al 10, ¿qué tan probable es que recomiendes PANAL a alguien interesado en estudiar aviación?',
+            30: 'En general, ¿cómo calificarías tu experiencia como alumno de PANAL?',
+            31: 'Si pudieras volver atrás, ¿elegirías PANAL nuevamente?',
+            32: '¿Hay algo que quieras compartir que no hayamos preguntado? Tu opinión es muy valiosa.'
+        };
+
+        const ALUMNI_QUESTIONS = {
+            1: '¿En qué año completaste tu última licencia en PANAL?',
+            2: '¿Cuál fue la última licencia que obtuviste en PANAL?',
+            3: '¿Cuál es tu país de origen?',
+            4: '¿Completaste el programa completo que tenías planeado?',
+            5: 'Si no completaste, ¿cuál fue la razón principal? (si completaste, marca N/A)',
+            6: '¿Cuál es tu situación laboral actual en aviación?',
+            7: '¿Cuánto tiempo después de egresar conseguiste tu primer empleo en aviación?',
+            8: '¿Dirías que tu formación en PANAL fue un factor importante para conseguir empleo?',
+            9: 'La formación que recibí en PANAL me preparó adecuadamente para el mundo laboral de la aviación.',
+            10: '¿La reputación de PANAL te abrió puertas en el mercado laboral?',
+            11: 'La calidad de la instrucción de vuelo en PANAL fue excelente.',
+            12: 'La formación teórica me dio bases sólidas para mi carrera.',
+            13: 'La experiencia con los simuladores (Redbird MCX) fue valiosa para mi formación.',
+            14: 'PANAL me formó no solo como piloto, sino con valores y disciplina profesional.',
+            15: '¿Qué aspecto de PANAL valoras más ahora que ya estás en el campo laboral?',
+            16: '¿En qué área sientes que PANAL te preparó menos de lo necesario?',
+            17: 'Del 0 al 10, ¿qué tan probable es que recomiendes PANAL a alguien que quiera estudiar aviación?',
+            18: 'Si pudieras volver atrás, ¿elegirías PANAL nuevamente?',
+            19: 'En general, ¿cómo calificarías tu experiencia completa en PANAL?',
+            20: '¿Qué le dirías a alguien que está considerando estudiar en PANAL?',
+            21: '¿Qué cambiarías o mejorarías de PANAL si pudieras?'
+        };
+
+        const DIMENSION_DESCRIPTIONS = {
+            'Inscripción': 'Proceso de Inscripción — Atención inicial, claridad de información, agilidad de trámites',
+            'Instrucción': 'Calidad de Instrucción — Dominio técnico, paciencia, clases teóricas, material didáctico, progreso',
+            'Equipos': 'Equipos y Recursos — Estado de aviones, simulador Redbird, disponibilidad de horarios',
+            'Admin': 'Atención Administrativa — Rapidez, amabilidad, claridad en pagos, comunicación',
+            'Infraestructura': 'Infraestructura y Ambiente — Instalaciones, comodidad, seguridad, ambiente profesional',
+            'Valoración': 'Valoración General — Experiencia global, satisfacción, disposición a recomendar',
+            'Profesional': 'Situación Profesional — Preparación laboral, influencia de PANAL en el empleo',
+            'Retrospectiva': 'Evaluación Retrospectiva — Calidad de instrucción, formación teórica, simuladores, valores'
+        };
+
+        const SAMPLE_COMMENTS = [
+            "Excelente escuela, muy contento con mi progreso.",
+            "Me gustaría más disponibilidad de aviones.",
+            "Los instructores son de primera.",
+            "El precio es un poco alto comparado con otras escuelas.",
+            "Necesitan mejorar el WiFi y las áreas de espera.",
+            "Todo bien, sigan así!",
+            "Las cancelaciones por clima y mantenimiento me retrasan mucho.",
+            "Gracias por la dedicación de los instructores.",
+            "El simulador Redbird es increíble, ojalá hubiera más horas disponibles.",
+            "La parte administrativa a veces es lenta, pero en general bien.",
+            "Me hubiera gustado más orientación sobre opciones laborales.",
+            "El programa de instrucción es muy completo.",
+            "Falta un poco de organización en los horarios.",
+            "Recomiendo PANAL a cualquiera que quiera ser piloto.",
+            "Los costos adicionales no fueron claros al inicio.",
+            "Muy buena experiencia en general.",
+            "Las instalaciones podrían estar más limpias.",
+            "Agradezco la paciencia de mi instructor."
+        ];
+
+        const ALUMNI_COMMENTS = {
+            DIRIA: [
+                "Que se prepare económicamente y que tenga paciencia.",
+                "Es una excelente inversión en tu futuro.",
+                "Que investigue bien y compare con otras escuelas.",
+                "100% recomendado, no se van a arrepentir.",
+                "Que se asegure de tener tiempo completo para dedicarle.",
+                "Los instructores son lo mejor de PANAL.",
+                "Que aproveche cada hora de vuelo al máximo.",
+                "Va a ser difícil pero vale la pena.",
+                "Que no se desanime con los retrasos por mantenimiento.",
+                "La mejor decisión que tomé."
+            ],
+            MEJORA: [
+                "Más horas de vuelo en el programa.",
+                "Mejor infraestructura de aulas.",
+                "Programa de inserción laboral post-egreso.",
+                "Más aviones para reducir tiempos de espera.",
+                "Convenios con aerolíneas para empleo.",
+                "Nada, todo estuvo perfecto.",
+                "El precio debería ser más competitivo.",
+                "Más simulador y escenarios avanzados.",
+                "Curso de inglés aeronáutico integrado.",
+                "Programa de becas o financiamiento.",
+                "Mejor comunicación administrativa."
+            ]
+        };
+
+        // ============================================================================
+        // DEMO DATA GENERATOR
+        // ============================================================================
+
+        function genStudent(n) {
+            const rows = [];
+            for (let i = 0; i < n; i++) {
+                const q = {};
+                q[1] = Math.random() > 0.5 ? '18-22' : '23-27';
+                q[2] = ['El Salvador', 'Belice', 'Guatemala', 'Honduras'][Math.floor(Math.random() * 4)];
+                q[3] = ['PPL', 'IFR', 'CPL', 'Instructor'][Math.floor(Math.random() * 4)];
+                q[4] = ['<3m', '3-6m', '6-12m', '1-2a', '>2a'][Math.floor(Math.random() * 5)];
+                q[5] = ['Redes', 'Recomendación', 'Aeropuerto', 'Internet'][Math.floor(Math.random() * 4)];
+
+                q[6] = Math.floor(Math.random() * 5) + 1;
+                q[7] = Math.floor(Math.random() * 5) + 1;
+                q[8] = Math.floor(Math.random() * 5) + 1;
+                q[9] = ['Reputación', 'Calidad flota', 'Recomendación', 'Ubicación'][Math.floor(Math.random() * 4)];
+
+                q[10] = Math.floor(Math.random() * 5) + 1;
+                q[11] = Math.floor(Math.random() * 5) + 1;
+                q[12] = Math.floor(Math.random() * 5) + 1;
+                q[13] = Math.floor(Math.random() * 5) + 1;
+                q[14] = Math.floor(Math.random() * 5) + 1;
+                q[15] = ['Más horas vuelo', 'Más material teórico', 'Mejor retroalimentación', 'Conforme'][Math.floor(Math.random() * 4)];
+
+                q[16] = Math.floor(Math.random() * 5) + 1;
+                q[17] = Math.floor(Math.random() * 5) + 1;
+                q[18] = Math.floor(Math.random() * 5) + 1;
+                q[19] = Math.floor(Math.random() * 5) + 1;
+                q[20] = ['Nunca', '1-2 veces', '3-5 veces', 'Más de 5 veces'][Math.floor(Math.random() * 4)];
+
+                q[21] = Math.floor(Math.random() * 5) + 1;
+                q[22] = Math.floor(Math.random() * 5) + 1;
+                q[23] = Math.floor(Math.random() * 5) + 1;
+                q[24] = ['WhatsApp', 'Correo', 'Presencial'][Math.floor(Math.random() * 3)];
+
+                q[25] = Math.floor(Math.random() * 5) + 1;
+                q[26] = Math.floor(Math.random() * 5) + 1;
+                q[27] = Math.floor(Math.random() * 5) + 1;
+                q[28] = ['Área de espera', 'Climatización', 'Cafetería'][Math.floor(Math.random() * 3)];
+
+                q[29] = Math.floor(Math.random() * 11);
+                q[30] = Math.floor(Math.random() * 5) + 1;
+                q[31] = ['Definitivamente sí', 'Probablemente sí', 'No estoy seguro'][Math.floor(Math.random() * 3)];
+                q[32] = SAMPLE_COMMENTS[Math.floor(Math.random() * SAMPLE_COMMENTS.length)];
+
+                rows.push({ timestamp: new Date().toISOString(), q });
+            }
+            return rows;
+        }
+
+        function genAlumni(n) {
+            const rows = [];
+            for (let i = 0; i < n; i++) {
+                const q = {};
+                q[1] = ['2024-2026', '2021-2023', '2018-2020', '2015-2017'][Math.floor(Math.random() * 4)];
+                q[2] = ['PPL', 'IFR', 'CPL', 'Instructor'][Math.floor(Math.random() * 4)];
+                q[3] = ['El Salvador', 'Belice', 'Guatemala', 'Honduras'][Math.floor(Math.random() * 4)];
+                q[4] = ['Sí completé', 'No me retiré', 'Cambié de plan'][Math.floor(Math.random() * 3)];
+                q[5] = ['N/A', 'Razones económicas', 'Dificultad académica'][Math.floor(Math.random() * 3)];
+
+                q[6] = ['Piloto aerolínea', 'Piloto privado', 'Instructor', 'Aviación no piloto'][Math.floor(Math.random() * 4)];
+                q[7] = ['<6m', '6-12m', '1-2a', '>2a', 'Aún no'][Math.floor(Math.random() * 5)];
+                q[8] = ['Factor decisivo', 'Uno de varios', 'Poca influencia'][Math.floor(Math.random() * 3)];
+                q[9] = Math.floor(Math.random() * 5) + 1;
+                q[10] = ['Sí reconocida', 'Fue indiferente'][Math.floor(Math.random() * 2)];
+
+                q[11] = Math.floor(Math.random() * 5) + 1;
+                q[12] = Math.floor(Math.random() * 5) + 1;
+                q[13] = Math.floor(Math.random() * 5) + 1;
+                q[14] = Math.floor(Math.random() * 5) + 1;
+                q[15] = ['Instrucción práctica', 'Preparación teórica', 'Valores y disciplina'][Math.floor(Math.random() * 3)];
+                q[16] = ['Entrevistas', 'Inglés aeronáutico', 'CRM', 'Horas insuficientes'][Math.floor(Math.random() * 4)];
+
+                q[17] = Math.floor(Math.random() * 11);
+                q[18] = ['Definitivamente sí', 'Probablemente sí', 'No estoy seguro'][Math.floor(Math.random() * 3)];
+                q[19] = Math.floor(Math.random() * 5) + 1;
+                q[20] = ALUMNI_COMMENTS.DIRIA[Math.floor(Math.random() * ALUMNI_COMMENTS.DIRIA.length)];
+                q[21] = ALUMNI_COMMENTS.MEJORA[Math.floor(Math.random() * ALUMNI_COMMENTS.MEJORA.length)];
+
+                rows.push({ timestamp: new Date().toISOString(), q });
+            }
+            return rows;
+        }
+
+        // ============================================================================
+        // DATA FETCHING AND PARSING
+        // ============================================================================
+
+        // JSONP-style fallback for file:// protocol (bypasses CORS)
+        function fetchViaScript(url) {
+            return new Promise((resolve, reject) => {
+                const callbackName = '_cb' + Math.random().toString(36).slice(2);
+                const tqUrl = url + '&tqx=responseHandler:' + callbackName;
+
+                window[callbackName] = function(response) {
+                    delete window[callbackName];
+                    if (script.parentNode) script.parentNode.removeChild(script);
+
+                    if (response && response.table) {
+                        let headers = response.table.cols.map(c => c.label);
+                        let rows = response.table.rows.map(r =>
+                            r.c.map(cell => cell ? (cell.v !== null ? String(cell.v) : '') : '')
+                        );
+
+                        // Fix: cuando GViz devuelve labels vacios y la primera fila
+                        // contiene los headers reales (pasa con hojas de formularios)
+                        const allLabelsEmpty = headers.every(h => !h || h.trim() === '');
+                        if (allLabelsEmpty && rows.length > 0) {
+                            headers = rows[0]; // usar primera fila como headers
+                            rows = rows.slice(1); // remover fila de headers de los datos
+                        }
+
+                        const csvLines = [headers.map(v => v.includes(',') ? '"' + v + '"' : v).join(',')];
+                        rows.forEach(r => csvLines.push(r.map(v => v.includes(',') ? '"' + v + '"' : v).join(',')));
+                        resolve(csvLines.join('\n'));
+                    } else {
+                        reject(new Error('Invalid gviz response'));
+                    }
+                };
+
+                const script = document.createElement('script');
+                script.src = tqUrl;
+                script.onerror = () => {
+                    delete window[callbackName];
+                    reject(new Error('Script load failed'));
+                };
+                document.head.appendChild(script);
+
+                setTimeout(() => {
+                    if (window[callbackName]) {
+                        delete window[callbackName];
+                        if (script.parentNode) script.parentNode.removeChild(script);
+                        reject(new Error('Timeout'));
+                    }
+                }, 15000);
+            });
+        }
+
+        async function fetchFromSheets() {
+            try {
+                showLoading(true);
+                console.log('Fetching from Google Sheets...');
+
+                const studentCSVUrl = `https://docs.google.com/spreadsheets/d/${CONFIG.STUDENT_SHEET_ID}/export?format=csv&gid=${CONFIG.STUDENT_GID}`;
+                const alumniCSVUrl = `https://docs.google.com/spreadsheets/d/${CONFIG.ALUMNI_SHEET_ID}/export?format=csv&gid=${CONFIG.ALUMNI_GID}`;
+
+                let studentCSV = null;
+                let alumniCSV = null;
+
+                // Method 1: Direct fetch (works from http/https origins)
+                try {
+                    const [studentResponse, alumniResponse] = await Promise.all([
+                        fetch(studentCSVUrl, { redirect: 'follow' }),
+                        fetch(alumniCSVUrl, { redirect: 'follow' })
+                    ]);
+                    if (studentResponse.ok) studentCSV = await studentResponse.text();
+                    if (alumniResponse.ok) alumniCSV = await alumniResponse.text();
+                    console.log('Direct fetch success:', !!studentCSV, !!alumniCSV);
+                } catch (e) {
+                    console.warn('Direct fetch failed (CORS), trying JSONP fallback...', e.message);
+                }
+
+                // Method 2: JSONP via Google Visualization API (works from file:// too)
+                if (!studentCSV || !alumniCSV) {
+                    const studentGvizUrl = `https://docs.google.com/spreadsheets/d/${CONFIG.STUDENT_SHEET_ID}/gviz/tq?gid=${CONFIG.STUDENT_GID}&tq=select *`;
+                    const alumniGvizUrl = `https://docs.google.com/spreadsheets/d/${CONFIG.ALUMNI_SHEET_ID}/gviz/tq?gid=${CONFIG.ALUMNI_GID}&tq=select *`;
+                    try {
+                        if (!studentCSV) studentCSV = await fetchViaScript(studentGvizUrl);
+                        if (!alumniCSV) alumniCSV = await fetchViaScript(alumniGvizUrl);
+                        console.log('JSONP fetch success:', !!studentCSV, !!alumniCSV);
+                    } catch (e) {
+                        console.warn('JSONP fetch also failed:', e.message);
+                    }
+                }
+
+                if (studentCSV) {
+                    globalState.studentData = parseStudentCSV(studentCSV);
+                }
+                if (alumniCSV) {
+                    globalState.alumniData = parseAlumniCSV(alumniCSV);
+                }
+
+                // Conexion exitosa (aunque no haya datos)
+                if (studentCSV || alumniCSV) {
+                    globalState.dataSource = globalState.studentData.length > 0 || globalState.alumniData.length > 0 ? 'live' : 'empty';
+                    globalState.lastUpdate = new Date();
+                    showLoading(false);
+                    updateUI();
+                    setAutoRefresh();
+                    updateSourceBar();
+                } else {
+                    throw new Error('No se pudo conectar con Google Sheets');
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                globalState.dataSource = 'error';
+                globalState.studentData = [];
+                globalState.alumniData = [];
+                globalState.lastUpdate = null;
+                showLoading(false);
+                updateUI();
+                setAutoRefresh();
+                updateSourceBar();
+            }
+        }
+
+        function parseStudentCSV(csv) {
+            const lines = csv.trim().split('\n');
+            if (lines.length < 2) return [];
+
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = parseCSVLine(lines[i]);
+                if (values.length < 2) continue;
+                // Filtrar filas vacias (clearContent deja filas en blanco)
+                if (values.every(v => !v || v.trim() === '')) continue;
+
+                const row = {
+                    timestamp: values[0],
+                    q: {}
+                };
+
+                for (let j = 1; j <= 32; j++) {
+                    if (j < values.length) {
+                        const val = values[j].trim();
+                        if (SCALE_QUESTIONS.students.includes(j) || j === 29 || j === 30) {
+                            row.q[j] = parseInt(val) || 0;
+                        } else {
+                            row.q[j] = val;
+                        }
+                    }
+                }
+
+                data.push(row);
+            }
+
+            return data;
+        }
+
+        function parseAlumniCSV(csv) {
+            const lines = csv.trim().split('\n');
+            if (lines.length < 2) return [];
+
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = parseCSVLine(lines[i]);
+                if (values.length < 2) continue;
+                // Filtrar filas vacias (clearContent deja filas en blanco)
+                if (values.every(v => !v || v.trim() === '')) continue;
+
+                const row = {
+                    timestamp: values[0],
+                    q: {}
+                };
+
+                for (let j = 1; j <= 21; j++) {
+                    if (j < values.length) {
+                        const val = values[j].trim();
+                        if (SCALE_QUESTIONS.alumni.includes(j) || j === 17 || j === 19) {
+                            row.q[j] = parseInt(val) || 0;
+                        } else {
+                            row.q[j] = val;
+                        }
+                    }
+                }
+
+                data.push(row);
+            }
+
+            return data;
+        }
+
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                const nextChar = line[i + 1];
+
+                if (char === '"') {
+                    if (inQuotes && nextChar === '"') {
+                        current += '"';
+                        i++;
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current);
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+
+            result.push(current);
+            return result;
+        }
+
+        // ============================================================================
+        // CALCULATIONS AND ANALYTICS
+        // ============================================================================
+
+        function calculateStudentMetrics() {
+            if (getStudentData().length === 0) {
+                return {
+                    total: 0,
+                    satisfaction: '0.00',
+                    nps: 0,
+                    promoters: 0,
+                    dimensionData: {},
+                    likertDistribution: [0, 0, 0, 0, 0],
+                    npsDistribution: Array(11).fill(0),
+                    strengths: [],
+                    improvements: []
+                };
+            }
+
+            const data = getStudentData();
+            const total = data.length;
+
+            let satisfactionSum = 0;
+            let satisfactionCount = 0;
+
+            let npsSum = 0;
+            const npsScores = [0, 0, 0];
+            const npsDistribution = Array(11).fill(0);
+
+            const likertDistribution = [0, 0, 0, 0, 0];
+
+            const dimensionScores = {
+                'Inscripción': { sum: 0, count: 0 },
+                'Instrucción': { sum: 0, count: 0 },
+                'Equipos': { sum: 0, count: 0 },
+                'Admin': { sum: 0, count: 0 },
+                'Infraestructura': { sum: 0, count: 0 },
+                'Valoración': { sum: 0, count: 0 }
+            };
+
+            data.forEach(row => {
+                const npsValue = row.q[29] || 0;
+                npsSum += npsValue;
+                npsDistribution[npsValue]++;
+                if (npsValue >= 9) npsScores[0]++;
+                else if (npsValue >= 7) npsScores[1]++;
+                else npsScores[2]++;
+
+                const likertValue = row.q[30] || 0;
+                if (likertValue >= 1 && likertValue <= 5) {
+                    likertDistribution[likertValue - 1]++;
+                }
+
+                STUDENT_SECTIONS.forEach(section => {
+                    let sectionSum = 0;
+                    let sectionCount = 0;
+                    section.questions.forEach(q => {
+                        if (SCALE_QUESTIONS.students.includes(q) && row.q[q]) {
+                            sectionSum += row.q[q];
+                            sectionCount++;
+                        }
+                    });
+                    if (sectionCount > 0 && dimensionScores[section.short]) {
+                        dimensionScores[section.short].sum += sectionSum;
+                        dimensionScores[section.short].count += sectionCount;
+                    }
+                });
+
+                SCALE_QUESTIONS.students.forEach(q => {
+                    if (row.q[q]) {
+                        satisfactionSum += row.q[q];
+                        satisfactionCount++;
+                    }
+                });
+            });
+
+            const satisfaction = satisfactionCount > 0 ? satisfactionSum / satisfactionCount : 0;
+            const nps = total > 0 ? ((npsScores[0] - npsScores[2]) / total * 100).toFixed(0) : 0;
+            const promotersPercent = total > 0 ? ((npsScores[0] / total) * 100).toFixed(1) : 0;
+
+            const dimensionData = {};
+            Object.keys(dimensionScores).forEach(dim => {
+                const d = dimensionScores[dim];
+                dimensionData[dim] = d.count > 0 ? (d.sum / d.count).toFixed(2) : 0;
+            });
+
+            const sorted = Object.entries(dimensionData).sort((a, b) => parseFloat(b[1]) - parseFloat(a[1]));
+            const strengths = sorted.slice(0, 3).map(([name, score]) => ({ name, score }));
+            const improvements = sorted.slice(-3).reverse().map(([name, score]) => ({ name, score }));
+
+            return {
+                total,
+                satisfaction: satisfaction.toFixed(2),
+                nps: parseInt(nps),
+                promoters: parseFloat(promotersPercent),
+                dimensionData,
+                likertDistribution,
+                npsDistribution,
+                strengths,
+                improvements
+            };
+        }
+
+        function calculateAlumniMetrics() {
+            if (getAlumniData().length === 0) {
+                return {
+                    total: 0,
+                    satisfaction: '0.00',
+                    nps: 0,
+                    promoters: 0,
+                    dimensionData: {},
+                    likertDistribution: [0, 0, 0, 0, 0],
+                    npsDistribution: Array(11).fill(0),
+                    strengths: [],
+                    improvements: []
+                };
+            }
+
+            const data = getAlumniData();
+            const total = data.length;
+
+            let satisfactionSum = 0;
+            let satisfactionCount = 0;
+
+            let npsSum = 0;
+            const npsScores = [0, 0, 0];
+            const npsDistribution = Array(11).fill(0);
+
+            const likertDistribution = [0, 0, 0, 0, 0];
+
+            const dimensionScores = {
+                'Profesional': { sum: 0, count: 0 },
+                'Retrospectiva': { sum: 0, count: 0 },
+                'Valoración': { sum: 0, count: 0 }
+            };
+
+            data.forEach(row => {
+                const npsValue = row.q[17] || 0;
+                npsSum += npsValue;
+                npsDistribution[npsValue]++;
+                if (npsValue >= 9) npsScores[0]++;
+                else if (npsValue >= 7) npsScores[1]++;
+                else npsScores[2]++;
+
+                const likertValue = row.q[19] || 0;
+                if (likertValue >= 1 && likertValue <= 5) {
+                    likertDistribution[likertValue - 1]++;
+                }
+
+                ALUMNI_SECTIONS.forEach(section => {
+                    let sectionSum = 0;
+                    let sectionCount = 0;
+                    section.questions.forEach(q => {
+                        if (SCALE_QUESTIONS.alumni.includes(q) && row.q[q]) {
+                            sectionSum += row.q[q];
+                            sectionCount++;
+                        }
+                    });
+                    if (sectionCount > 0 && dimensionScores[section.short]) {
+                        dimensionScores[section.short].sum += sectionSum;
+                        dimensionScores[section.short].count += sectionCount;
+                    }
+                });
+
+                SCALE_QUESTIONS.alumni.forEach(q => {
+                    if (row.q[q]) {
+                        satisfactionSum += row.q[q];
+                        satisfactionCount++;
+                    }
+                });
+            });
+
+            const satisfaction = satisfactionCount > 0 ? satisfactionSum / satisfactionCount : 0;
+            const nps = total > 0 ? ((npsScores[0] - npsScores[2]) / total * 100).toFixed(0) : 0;
+            const promotersPercent = total > 0 ? ((npsScores[0] / total) * 100).toFixed(1) : 0;
+
+            const dimensionData = {};
+            Object.keys(dimensionScores).forEach(dim => {
+                const d = dimensionScores[dim];
+                dimensionData[dim] = d.count > 0 ? (d.sum / d.count).toFixed(2) : 0;
+            });
+
+            const sorted = Object.entries(dimensionData).sort((a, b) => parseFloat(b[1]) - parseFloat(a[1]));
+            const strengths = sorted.slice(0, 3).map(([name, score]) => ({ name, score }));
+            const improvements = sorted.slice(-3).reverse().map(([name, score]) => ({ name, score }));
+
+            return {
+                total,
+                satisfaction: satisfaction.toFixed(2),
+                nps: parseInt(nps),
+                promoters: parseFloat(promotersPercent),
+                dimensionData,
+                likertDistribution,
+                npsDistribution,
+                strengths,
+                improvements
+            };
+        }
+
+        // ============================================================================
+        // UI UPDATES
+        // ============================================================================
+
+        function updateUI() {
+            updateStudentsTab();
+            updateAlumniTab();
+            updateComparisonTab();
+            updateCounts();
+        }
+
+        function updateCounts() {
+            document.getElementById('studentCount').textContent = getStudentData().length;
+            document.getElementById('alumniCount').textContent = getAlumniData().length;
+        }
+
+        function updateStudentsTab() {
+            const metrics = calculateStudentMetrics();
+
+            document.getElementById('studentTotalResponses').textContent = metrics.total;
+            document.getElementById('studentSatisfaction').textContent = metrics.satisfaction;
+            document.getElementById('studentNPS').textContent = metrics.nps;
+            document.getElementById('studentPromoters').textContent = Math.round(metrics.promoters) + '%';
+
+            document.getElementById('studentStrengths').innerHTML = metrics.strengths
+                .map(s => `<div class="insight-item"><span class="insight-number">${s.score}/5</span> — ${DIMENSION_DESCRIPTIONS[s.name] || s.name}</div>`)
+                .join('');
+            document.getElementById('studentImprovements').innerHTML = metrics.improvements
+                .map(s => `<div class="insight-item"><span class="insight-number">${s.score}/5</span> — ${DIMENSION_DESCRIPTIONS[s.name] || s.name}</div>`)
+                .join('');
+
+            createStudentDimensionChart(metrics.dimensionData);
+            createStudentNPSChart(metrics.npsDistribution);
+            createStudentRadarChart(metrics.dimensionData);
+            createStudentLikertChart(metrics.likertDistribution);
+
+            createStudentAccordion();
+        }
+
+        function updateAlumniTab() {
+            const metrics = calculateAlumniMetrics();
+
+            document.getElementById('alumniTotalResponses').textContent = metrics.total;
+            document.getElementById('alumniSatisfaction').textContent = metrics.satisfaction;
+            document.getElementById('alumniNPS').textContent = metrics.nps;
+            document.getElementById('alumniPromoters').textContent = Math.round(metrics.promoters) + '%';
+
+            document.getElementById('alumniStrengths').innerHTML = metrics.strengths
+                .map(s => `<div class="insight-item"><span class="insight-number">${s.score}/5</span> — ${DIMENSION_DESCRIPTIONS[s.name] || s.name}</div>`)
+                .join('');
+            document.getElementById('alumniImprovements').innerHTML = metrics.improvements
+                .map(s => `<div class="insight-item"><span class="insight-number">${s.score}/5</span> — ${DIMENSION_DESCRIPTIONS[s.name] || s.name}</div>`)
+                .join('');
+
+            createAlumniDimensionChart(metrics.dimensionData);
+            createAlumniNPSChart(metrics.npsDistribution);
+            createAlumniRadarChart(metrics.dimensionData);
+            createAlumniLikertChart(metrics.likertDistribution);
+
+            createAlumniAccordion();
+        }
+
+        function updateComparisonTab() {
+            const studentMetrics = calculateStudentMetrics();
+            const alumniMetrics = calculateAlumniMetrics();
+
+            document.getElementById('compareStudentNPS').textContent = studentMetrics.nps;
+            document.getElementById('compareAlumniNPS').textContent = alumniMetrics.nps;
+
+            createComparisonNPSChart(studentMetrics.npsDistribution, alumniMetrics.npsDistribution);
+
+            updateComparisonTable(studentMetrics, alumniMetrics);
+
+            createTrendCharts();
+
+            updateComparisonConclusion(studentMetrics, alumniMetrics);
+        }
+
+        function updateComparisonTable(studentMetrics, alumniMetrics) {
+            const rows = [
+                {
+                    metric: 'Total de Respuestas',
+                    students: studentMetrics.total,
+                    alumni: alumniMetrics.total
+                },
+                {
+                    metric: 'Satisfacción General',
+                    students: studentMetrics.satisfaction + '/5',
+                    alumni: alumniMetrics.satisfaction + '/5'
+                },
+                {
+                    metric: 'NPS Score',
+                    students: studentMetrics.nps,
+                    alumni: alumniMetrics.nps
+                },
+                {
+                    metric: '% Promotores',
+                    students: Math.round(studentMetrics.promoters) + '%',
+                    alumni: Math.round(alumniMetrics.promoters) + '%'
+                }
+            ];
+
+            const tbody = document.getElementById('comparisonTableBody');
+            tbody.innerHTML = rows.map(row => {
+                const diff = row.metric === '% Promotores' || row.metric === 'NPS Score'
+                    ? (parseInt(row.students) - parseInt(row.alumni))
+                    : (parseFloat(row.students) - parseFloat(row.alumni));
+
+                const diffStr = diff > 0 ? `+${diff.toFixed(1)}` : diff.toFixed(1);
+                const diffClass = diff > 0 ? 'style="color: #28a745;"' : diff < 0 ? 'style="color: #dc3545;"' : '';
+
+                return `
+                    <tr>
+                        <td>${row.metric}</td>
+                        <td><span class="comparison-value">${row.students}</span></td>
+                        <td><span class="comparison-value">${row.alumni}</span></td>
+                        <td ${diffClass}><span class="comparison-value">${diffStr}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function updateComparisonConclusion(studentMetrics, alumniMetrics) {
+            let conclusion = '<div class="conclusion-text">';
+
+            const npsDiff = parseInt(studentMetrics.nps) - parseInt(alumniMetrics.nps);
+            if (npsDiff > 0) {
+                conclusion += `<div>Los <span class="conclusion-highlight">alumnos actuales tienen un NPS ${Math.abs(npsDiff)} puntos superior</span> a los exalumnos, lo que indica una experiencia educativa mejorada y mayor satisfacción en el programa actual.</div>`;
+            } else if (npsDiff < 0) {
+                conclusion += `<div>Los <span class="conclusion-highlight">exalumnos tienen un NPS ${Math.abs(npsDiff)} puntos superior</span> a los alumnos actuales, sugiriendo que la experiencia completa y la perspectiva de carrera mejoran la satisfacción general.</div>`;
+            } else {
+                conclusion += `<div>Ambos grupos presentan <span class="conclusion-highlight">NPS equivalentes</span>, lo que indica consistencia en la satisfacción a lo largo del tiempo.</div>`;
+            }
+
+            const satDiff = parseFloat(studentMetrics.satisfaction) - parseFloat(alumniMetrics.satisfaction);
+            if (Math.abs(satDiff) > 0.5) {
+                const group = satDiff > 0 ? 'alumnos' : 'exalumnos';
+                conclusion += `<div style="margin-top: 12px;">Los <span class="conclusion-highlight">${group}</span> reportan una satisfacción general ${satDiff > 0 ? 'superior' : 'inferior'} en las evaluaciones de escala.</div>`;
+            }
+
+            const promDiff = studentMetrics.promoters - alumniMetrics.promoters;
+            if (Math.abs(promDiff) > 5) {
+                const group = promDiff > 0 ? 'Alumnos' : 'Exalumnos';
+                conclusion += `<div style="margin-top: 12px;">${group} tiene un porcentaje de promotores ${Math.abs(promDiff).toFixed(1)}% ${promDiff > 0 ? 'mayor' : 'menor'}, lo que refleja su nivel de satisfacción y predisposición a recomendar la escuela.</div>`;
+            }
+
+            conclusion += '<div style="margin-top: 12px;">El análisis sugiere oportunidades para fortalecer la experiencia de ambos grupos y asegurar que los alumnos actuales mantengan la satisfacción después de su egreso.</div>';
+            conclusion += '</div>';
+
+            document.getElementById('comparisonConclusion').innerHTML = conclusion;
+        }
+
+        // ============================================================================
+        // CHART CREATION
+        // ============================================================================
+
+        let charts = {};
+
+        function createStudentDimensionChart(dimensionData) {
+            const ctx = document.getElementById('studentDimensionChart');
+            if (charts.studentDimension) charts.studentDimension.destroy();
+
+            const labels = Object.keys(dimensionData);
+            const data = Object.values(dimensionData).map(v => parseFloat(v));
+
+            charts.studentDimension = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Promedio de Satisfacción',
+                        data,
+                        backgroundColor: data.map(v =>
+                            v >= 4 ? '#28a745' : v >= 3 ? '#C8A951' : '#dc3545'
+                        ),
+                        borderRadius: 4,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            min: 0,
+                            max: 5,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function createStudentNPSChart(npsDistribution) {
+            const ctx = document.getElementById('studentNPSChart');
+            if (charts.studentNPS) charts.studentNPS.destroy();
+
+            const promoters = npsDistribution.slice(9, 11).reduce((a, b) => a + b, 0);
+            const passive = npsDistribution.slice(7, 9).reduce((a, b) => a + b, 0);
+            const detractors = npsDistribution.slice(0, 7).reduce((a, b) => a + b, 0);
+
+            charts.studentNPS = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Promotores', 'Pasivos', 'Detractores'],
+                    datasets: [{
+                        data: [promoters, passive, detractors],
+                        backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+                        borderColor: 'white',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createStudentRadarChart(dimensionData) {
+            const ctx = document.getElementById('studentRadarChart');
+            if (charts.studentRadar) charts.studentRadar.destroy();
+
+            const labels = Object.keys(dimensionData);
+            const data = Object.values(dimensionData).map(v => parseFloat(v));
+
+            charts.studentRadar = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Promedio de Satisfacción',
+                        data,
+                        borderColor: CONFIG.COLORS.navy,
+                        backgroundColor: 'rgba(27, 58, 92, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: CONFIG.COLORS.gold,
+                        pointBorderColor: 'white',
+                        pointBorderWidth: 2,
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 5,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function createStudentLikertChart(likertDistribution) {
+            const ctx = document.getElementById('studentLikertChart');
+            if (charts.studentLikert) charts.studentLikert.destroy();
+
+            const labels = ['Muy malo', 'Malo', 'Regular', 'Bueno', 'Excelente'];
+
+            charts.studentLikert = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Cantidad de Respuestas',
+                        data: likertDistribution,
+                        backgroundColor: ['#dc3545', '#ffc107', '#6c757d', '#28a745', '#1B3A5C'],
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function createAlumniDimensionChart(dimensionData) {
+            const ctx = document.getElementById('alumniDimensionChart');
+            if (charts.alumniDimension) charts.alumniDimension.destroy();
+
+            const labels = Object.keys(dimensionData);
+            const data = Object.values(dimensionData).map(v => parseFloat(v));
+
+            charts.alumniDimension = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Promedio de Satisfacción',
+                        data,
+                        backgroundColor: data.map(v =>
+                            v >= 4 ? '#28a745' : v >= 3 ? '#C8A951' : '#dc3545'
+                        ),
+                        borderRadius: 4,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            min: 0,
+                            max: 5,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function createAlumniNPSChart(npsDistribution) {
+            const ctx = document.getElementById('alumniNPSChart');
+            if (charts.alumniNPS) charts.alumniNPS.destroy();
+
+            const promoters = npsDistribution.slice(9, 11).reduce((a, b) => a + b, 0);
+            const passive = npsDistribution.slice(7, 9).reduce((a, b) => a + b, 0);
+            const detractors = npsDistribution.slice(0, 7).reduce((a, b) => a + b, 0);
+
+            charts.alumniNPS = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Promotores', 'Pasivos', 'Detractores'],
+                    datasets: [{
+                        data: [promoters, passive, detractors],
+                        backgroundColor: ['#28a745', '#ffc107', '#dc3545'],
+                        borderColor: 'white',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createAlumniRadarChart(dimensionData) {
+            const ctx = document.getElementById('alumniRadarChart');
+            if (charts.alumniRadar) charts.alumniRadar.destroy();
+
+            const labels = Object.keys(dimensionData);
+            const data = Object.values(dimensionData).map(v => parseFloat(v));
+
+            charts.alumniRadar = new Chart(ctx, {
+                type: 'radar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Promedio de Satisfacción',
+                        data,
+                        borderColor: CONFIG.COLORS.navy,
+                        backgroundColor: 'rgba(27, 58, 92, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: CONFIG.COLORS.gold,
+                        pointBorderColor: 'white',
+                        pointBorderWidth: 2,
+                        pointRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            min: 0,
+                            max: 5,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function createAlumniLikertChart(likertDistribution) {
+            const ctx = document.getElementById('alumniLikertChart');
+            if (charts.alumniLikert) charts.alumniLikert.destroy();
+
+            const labels = ['Muy malo', 'Malo', 'Regular', 'Bueno', 'Excelente'];
+
+            charts.alumniLikert = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Cantidad de Respuestas',
+                        data: likertDistribution,
+                        backgroundColor: ['#dc3545', '#ffc107', '#6c757d', '#28a745', '#1B3A5C'],
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function createComparisonNPSChart(studentNPS, alumniNPS) {
+            const ctx = document.getElementById('comparisonNPSChart');
+            if (charts.comparisonNPS) charts.comparisonNPS.destroy();
+
+            const labels = Array.from({length: 11}, (_, i) => i.toString());
+
+            charts.comparisonNPS = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Alumnos',
+                            data: studentNPS,
+                            backgroundColor: CONFIG.COLORS.gold,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Exalumnos',
+                            data: alumniNPS,
+                            backgroundColor: CONFIG.COLORS.navy,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createTrendCharts() {
+            const studentData = getStudentData();
+            const alumniData = getAlumniData();
+
+            // Helper: group data by month key "YYYY-MM"
+            function groupByMonth(data, satisfactionQ, npsQ) {
+                const months = {};
+                data.forEach(row => {
+                    const d = parseTimestamp(row.timestamp);
+                    if (!d) return;
+                    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+                    if (!months[key]) months[key] = { satSum: 0, satCount: 0, npsScores: [], label: '' };
+                    const bucket = months[key];
+                    // Satisfaction (escala 1-5)
+                    const satVal = row.q[satisfactionQ];
+                    if (satVal && satVal >= 1 && satVal <= 5) {
+                        bucket.satSum += satVal;
+                        bucket.satCount++;
+                    }
+                    // NPS (escala 0-10)
+                    const npsVal = row.q[npsQ];
+                    if (npsVal !== undefined && npsVal !== null) {
+                        bucket.npsScores.push(npsVal);
+                    }
+                    // Label bonita
+                    const monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+                    bucket.label = monthNames[d.getMonth()] + ' ' + d.getFullYear();
+                });
+                return months;
+            }
+
+            // Students: satisfaction q30, NPS q29
+            const studentMonths = groupByMonth(studentData, 30, 29);
+            // Alumni: satisfaction q19, NPS q17
+            const alumniMonths = groupByMonth(alumniData, 19, 17);
+
+            // Merge all month keys and sort
+            const allKeys = [...new Set([...Object.keys(studentMonths), ...Object.keys(alumniMonths)])].sort();
+
+            if (allKeys.length === 0) {
+                // No data — clear canvases
+                if (charts.trendSatisfaction) { charts.trendSatisfaction.destroy(); charts.trendSatisfaction = null; }
+                if (charts.trendNPS) { charts.trendNPS.destroy(); charts.trendNPS = null; }
+                return;
+            }
+
+            const labels = allKeys.map(k => {
+                const m = studentMonths[k] || alumniMonths[k];
+                return m ? m.label : k;
+            });
+
+            // Build datasets
+            const studentSatData = allKeys.map(k => {
+                const b = studentMonths[k];
+                return b && b.satCount > 0 ? parseFloat((b.satSum / b.satCount).toFixed(2)) : null;
+            });
+            const alumniSatData = allKeys.map(k => {
+                const b = alumniMonths[k];
+                return b && b.satCount > 0 ? parseFloat((b.satSum / b.satCount).toFixed(2)) : null;
+            });
+
+            function calcNPS(scores) {
+                if (!scores || scores.length === 0) return null;
+                const promoters = scores.filter(s => s >= 9).length;
+                const detractors = scores.filter(s => s <= 6).length;
+                return parseFloat(((promoters - detractors) / scores.length * 100).toFixed(1));
+            }
+
+            const studentNPSData = allKeys.map(k => {
+                const b = studentMonths[k];
+                return b ? calcNPS(b.npsScores) : null;
+            });
+            const alumniNPSData = allKeys.map(k => {
+                const b = alumniMonths[k];
+                return b ? calcNPS(b.npsScores) : null;
+            });
+
+            // --- Satisfaction Trend Chart ---
+            const ctxSat = document.getElementById('trendSatisfactionChart');
+            if (charts.trendSatisfaction) charts.trendSatisfaction.destroy();
+
+            charts.trendSatisfaction = new Chart(ctxSat, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Alumnos',
+                            data: studentSatData,
+                            borderColor: CONFIG.COLORS.gold,
+                            backgroundColor: CONFIG.COLORS.gold + '33',
+                            tension: 0.3,
+                            fill: false,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            spanGaps: true
+                        },
+                        {
+                            label: 'Exalumnos',
+                            data: alumniSatData,
+                            borderColor: CONFIG.COLORS.navy,
+                            backgroundColor: CONFIG.COLORS.navy + '33',
+                            tension: 0.3,
+                            fill: false,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            spanGaps: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: 1,
+                            max: 5,
+                            title: { display: true, text: 'Promedio (1-5)' }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    return ctx.dataset.label + ': ' + (ctx.parsed.y !== null ? ctx.parsed.y.toFixed(2) : 'Sin datos');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // --- NPS Trend Chart ---
+            const ctxNPS = document.getElementById('trendNPSChart');
+            if (charts.trendNPS) charts.trendNPS.destroy();
+
+            charts.trendNPS = new Chart(ctxNPS, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Alumnos',
+                            data: studentNPSData,
+                            borderColor: CONFIG.COLORS.gold,
+                            backgroundColor: CONFIG.COLORS.gold + '33',
+                            tension: 0.3,
+                            fill: false,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            spanGaps: true
+                        },
+                        {
+                            label: 'Exalumnos',
+                            data: alumniNPSData,
+                            borderColor: CONFIG.COLORS.navy,
+                            backgroundColor: CONFIG.COLORS.navy + '33',
+                            tension: 0.3,
+                            fill: false,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            spanGaps: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            min: -100,
+                            max: 100,
+                            title: { display: true, text: 'NPS (-100 a 100)' },
+                            ticks: { stepSize: 25 }
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(ctx) {
+                                    return ctx.dataset.label + ': ' + (ctx.parsed.y !== null ? ctx.parsed.y.toFixed(1) : 'Sin datos');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ============================================================================
+        // ACCORDION BUILDERS
+        // ============================================================================
+
+        function createStudentAccordion() {
+            const accordion = document.getElementById('studentAccordion');
+            accordion.innerHTML = '';
+
+            STUDENT_SECTIONS.forEach(section => {
+                const sectionData = getSectionData('students', section);
+
+                const item = document.createElement('div');
+                item.className = 'accordion-item';
+
+                item.innerHTML = `
+                    <div class="accordion-header" onclick="this.classList.toggle('active'); this.nextElementSibling.classList.toggle('active');">
+                        <span>${section.name}</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        ${sectionData.html}
+                    </div>
+                `;
+
+                accordion.appendChild(item);
+            });
+        }
+
+        function createAlumniAccordion() {
+            const accordion = document.getElementById('alumniAccordion');
+            accordion.innerHTML = '';
+
+            ALUMNI_SECTIONS.forEach(section => {
+                const sectionData = getSectionData('alumni', section);
+
+                const item = document.createElement('div');
+                item.className = 'accordion-item';
+
+                item.innerHTML = `
+                    <div class="accordion-header" onclick="this.classList.toggle('active'); this.nextElementSibling.classList.toggle('active');">
+                        <span>${section.name}</span>
+                        <span class="accordion-icon">▼</span>
+                    </div>
+                    <div class="accordion-content">
+                        ${sectionData.html}
+                    </div>
+                `;
+
+                accordion.appendChild(item);
+            });
+        }
+
+        function getSectionData(type, section) {
+            const data = type === 'students' ? getStudentData() : getAlumniData();
+            const scaleQuestions = type === 'students' ? SCALE_QUESTIONS.students : SCALE_QUESTIONS.alumni;
+            const npsQuestion = type === 'students' ? NPS_QUESTIONS.students : NPS_QUESTIONS.alumni;
+            const openEndedQuestions = type === 'students' ? [32] : [20, 21];
+
+            const likertLabels = ['Muy en desacuerdo', 'En desacuerdo', 'Neutral', 'De acuerdo', 'Muy de acuerdo'];
+            const ratingLabels = ['Muy malo', 'Malo', 'Regular', 'Bueno', 'Excelente'];
+            const scaleColors = ['#dc3545', '#e67e22', '#95a5a6', '#27ae60', '#1B3A5C'];
+            const ratingQuestions = type === 'students' ? RATING_SCALE_QUESTIONS.students : RATING_SCALE_QUESTIONS.alumni;
+
+            let html = '<div class="section-content">';
+
+            section.questions.forEach(qNum => {
+                const questionTexts = type === 'students' ? STUDENT_QUESTIONS : ALUMNI_QUESTIONS;
+                const questionText = questionTexts[qNum] || `Pregunta ${qNum}`;
+                const values = data.map(row => row.q[qNum]);
+                const totalResponses = values.filter(v => v !== undefined && v !== null && v !== '').length;
+
+                html += `<div class="question-group">`;
+                html += `<div class="question-label">P${qNum}. ${questionText}</div>`;
+
+                if (scaleQuestions.includes(qNum)) {
+                    // --- ESCALA 1-5 (Likert o Calificación) ---
+                    const isRating = ratingQuestions.includes(qNum);
+                    const scaleLabels = isRating ? ratingLabels : likertLabels;
+                    const hintText = isRating
+                        ? `Escala de calificación: 1 = Muy malo, 5 = Excelente`
+                        : `Escala de acuerdo: 1 = Muy en desacuerdo, 5 = Muy de acuerdo`;
+
+                    html += `<div class="question-type-hint">${hintText} &nbsp;|&nbsp; ${totalResponses} respuestas</div>`;
+
+                    const distribution = [0, 0, 0, 0, 0];
+                    const validValues = values.filter(v => v >= 1 && v <= 5);
+                    validValues.forEach(v => distribution[v - 1]++);
+                    const total = validValues.length;
+                    const avg = total > 0 ? (validValues.reduce((a, b) => a + b, 0) / total) : 0;
+                    const maxCount = Math.max(...distribution);
+
+                    html += `<div class="question-summary">Promedio: <span class="avg-score">${avg.toFixed(1)}</span> de 5.0</div>`;
+                    html += `<div class="scale-container">`;
+
+                    scaleLabels.forEach((label, idx) => {
+                        const count = distribution[idx];
+                        const pct = total > 0 ? (count / total * 100).toFixed(0) : 0;
+                        const barWidth = maxCount > 0 ? (count / maxCount * 100) : 0;
+
+                        html += `<div class="scale-row">`;
+                        html += `<div class="scale-row-label">${idx + 1} — ${label}</div>`;
+                        html += `<div class="scale-row-bar-wrapper"><div class="scale-row-bar" style="width: ${barWidth}%; background: ${scaleColors[idx]};"></div></div>`;
+                        html += `<div class="scale-row-value">${count} (${pct}%)</div>`;
+                        html += `</div>`;
+                    });
+
+                    html += `</div>`;
+
+                } else if (qNum === npsQuestion) {
+                    // --- NPS 0-10 ---
+                    html += `<div class="question-type-hint">Escala NPS: 0 = Nada probable, 10 = Extremadamente probable &nbsp;|&nbsp; ${totalResponses} respuestas</div>`;
+
+                    const npsDistrib = Array(11).fill(0);
+                    const validNPS = values.filter(v => v >= 0 && v <= 10);
+                    validNPS.forEach(v => npsDistrib[v]++);
+                    const total = validNPS.length;
+                    const avg = total > 0 ? (validNPS.reduce((a, b) => a + b, 0) / total) : 0;
+                    const promoters = npsDistrib.slice(9).reduce((a, b) => a + b, 0);
+                    const passives = npsDistrib.slice(7, 9).reduce((a, b) => a + b, 0);
+                    const detractors = npsDistrib.slice(0, 7).reduce((a, b) => a + b, 0);
+                    const npsScore = total > 0 ? ((promoters - detractors) / total * 100).toFixed(0) : 0;
+
+                    html += `<div class="question-summary">Promedio: <span class="avg-score">${avg.toFixed(1)}</span> de 10 &nbsp;|&nbsp; NPS: <span class="avg-score">${npsScore}</span></div>`;
+                    html += `<div class="mc-list">`;
+                    html += `<div class="mc-row"><div class="mc-row-label" style="color: #28a745; font-weight: 600;">Promotores (9-10)</div><div class="mc-row-bar-wrapper"><div class="mc-row-bar top" style="width: ${total > 0 ? promoters/total*100 : 0}%; background: #28a745;"></div></div><div class="mc-row-value">${promoters} (${total > 0 ? (promoters/total*100).toFixed(0) : 0}%)</div></div>`;
+                    html += `<div class="mc-row"><div class="mc-row-label" style="color: #f39c12; font-weight: 600;">Pasivos (7-8)</div><div class="mc-row-bar-wrapper"><div class="mc-row-bar" style="width: ${total > 0 ? passives/total*100 : 0}%; background: #f39c12;"></div></div><div class="mc-row-value">${passives} (${total > 0 ? (passives/total*100).toFixed(0) : 0}%)</div></div>`;
+                    html += `<div class="mc-row"><div class="mc-row-label" style="color: #dc3545; font-weight: 600;">Detractores (0-6)</div><div class="mc-row-bar-wrapper"><div class="mc-row-bar" style="width: ${total > 0 ? detractors/total*100 : 0}%; background: #dc3545;"></div></div><div class="mc-row-value">${detractors} (${total > 0 ? (detractors/total*100).toFixed(0) : 0}%)</div></div>`;
+                    html += `</div>`;
+
+                } else if (openEndedQuestions.includes(qNum)) {
+                    // --- PREGUNTAS ABIERTAS ---
+                    const validResponses = values.filter(v => v && String(v).trim().length > 3);
+                    html += `<div class="question-type-hint">Respuesta abierta &nbsp;|&nbsp; ${validResponses.length} respuestas recibidas</div>`;
+
+                    html += `<div class="open-text-container">`;
+                    html += `<div class="open-text-label">Algunas respuestas representativas:</div>`;
+                    const samples = validResponses.slice(0, 4);
+                    if (samples.length > 0) {
+                        samples.forEach(sample => {
+                            html += `<div class="open-text">"${sample}"</div>`;
+                        });
+                    } else {
+                        html += `<div class="open-text">No se han recibido respuestas abiertas aún.</div>`;
+                    }
+                    html += `</div>`;
+
+                } else {
+                    // --- OPCION MULTIPLE ---
+                    const valueCounts = {};
+                    values.forEach(v => {
+                        if (v !== undefined && v !== null && String(v).trim() !== '') {
+                            valueCounts[v] = (valueCounts[v] || 0) + 1;
+                        }
+                    });
+
+                    const sorted = Object.entries(valueCounts)
+                        .sort((a, b) => b[1] - a[1]);
+
+                    const totalMC = sorted.reduce((sum, [, count]) => sum + count, 0);
+                    const maxMC = sorted.length > 0 ? sorted[0][1] : 0;
+
+                    html += `<div class="question-type-hint">Selección múltiple &nbsp;|&nbsp; ${totalMC} respuestas</div>`;
+                    html += `<div class="mc-list">`;
+
+                    sorted.forEach(([val, count], idx) => {
+                        const pct = totalMC > 0 ? (count / totalMC * 100).toFixed(0) : 0;
+                        const barWidth = maxMC > 0 ? (count / maxMC * 100) : 0;
+                        const isTop = idx === 0;
+
+                        html += `<div class="mc-row">`;
+                        html += `<div class="mc-row-label">${val}</div>`;
+                        html += `<div class="mc-row-bar-wrapper"><div class="mc-row-bar ${isTop ? 'top' : ''}" style="width: ${barWidth}%;"></div></div>`;
+                        html += `<div class="mc-row-value">${count} (${pct}%)</div>`;
+                        html += `</div>`;
+                    });
+
+                    html += `</div>`;
+
+                    if (totalMC > 0 && sorted.length > 0) {
+                        html += `<div class="mc-total">Respuesta más frecuente: <strong>${sorted[0][0]}</strong> con ${sorted[0][1]} de ${totalMC} respuestas</div>`;
+                    }
+                }
+
+                html += `</div>`;
+            });
+
+            html += '</div>';
+            return { html };
+        }
+
+        // ============================================================================
+        // TAB SWITCHING
+        // ============================================================================
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            const tabMap = { students: 'studentsTab', alumni: 'alumniTab', comparison: 'comparisonTab' };
+            document.getElementById(tabMap[tabName]).classList.add('active');
+
+            const tabButtons = document.querySelectorAll('.tab');
+            const tabIndex = { students: 0, alumni: 1, comparison: 2 };
+            if (tabButtons[tabIndex[tabName]]) {
+                tabButtons[tabIndex[tabName]].classList.add('active');
+            }
+        }
+
+        // ============================================================================
+        // DATA MANAGEMENT
+        // ============================================================================
+
+        function refreshData() {
+            fetchFromSheets();
+        }
+
+        const ADMIN_KEY = '12345';
+
+        async function loadDemoData() {
+            const clave = prompt('Ingresa la clave de administrador para generar datos demo:');
+            if (clave === null) return;
+            if (clave !== ADMIN_KEY) {
+                alert('❌ Clave incorrecta.');
+                return;
+            }
+
+            showLoading(true);
+            document.querySelector('.btn-secondary[onclick="loadDemoData()"]').disabled = true;
+            document.querySelector('.btn-secondary[onclick="loadDemoData()"]').textContent = '⏳ Generando datos...';
+
+            try {
+                const response = await fetch(CONFIG.WEB_APP_URL + '?action=generate', {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+                const result = await response.json();
+
+                if (result.success || result.status === 'ok') {
+                    alert('✅ Datos generados correctamente:\n' + result.message);
+                    // Recargar datos desde las hojas
+                    fetchFromSheets();
+                } else {
+                    alert('⚠️ Resultado parcial:\n' + result.message);
+                    fetchFromSheets();
+                }
+            } catch (error) {
+                console.error('Error al generar datos demo:', error);
+                alert('❌ Error al generar datos: ' + error.message + '\n\nVerifica que el Web App esté desplegado correctamente.');
+                showLoading(false);
+            } finally {
+                var btn = document.querySelector('.btn-secondary[onclick="loadDemoData()"]');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '📊 Datos Demo';
+                }
+            }
+        }
+
+        async function clearData() {
+            const clave = prompt('Ingresa la clave de administrador para limpiar datos:');
+            if (clave === null) return;
+            if (clave !== ADMIN_KEY) {
+                alert('❌ Clave incorrecta.');
+                return;
+            }
+            if (!confirm('⚠️ ATENCIÓN: Esto eliminará PERMANENTEMENTE todas las respuestas de las encuestas en Google Sheets.\n\nEsta acción NO se puede deshacer.\n\n¿Estás seguro de que deseas continuar?')) {
+                return;
+            }
+
+            showLoading(true);
+            try {
+                const response = await fetch(CONFIG.WEB_APP_URL + '?action=clear', {
+                    method: 'GET',
+                    redirect: 'follow'
+                });
+                const result = await response.json();
+
+                if (result.status === 'ok') {
+                    globalState.studentData = [];
+                    globalState.alumniData = [];
+                    globalState.dataSource = 'loading';
+                    globalState.lastUpdate = null;
+                    updateUI();
+                    updateSourceBar();
+                    alert('Datos eliminados correctamente de ambas hojas de Google Sheets.');
+                } else {
+                    alert('Hubo un problema al limpiar los datos: ' + result.message);
+                    // Refrescar para mostrar el estado actual
+                    fetchFromSheets();
+                }
+            } catch (error) {
+                console.error('Error al limpiar datos:', error);
+                // Fallback: intentar via JSONP si CORS bloquea fetch
+                try {
+                    const script = document.createElement('script');
+                    script.src = CONFIG.WEB_APP_URL + '?action=clear&callback=_clearCallback';
+                    window._clearCallback = function(result) {
+                        delete window._clearCallback;
+                        if (script.parentNode) script.parentNode.removeChild(script);
+                        globalState.studentData = [];
+                        globalState.alumniData = [];
+                        globalState.dataSource = 'loading';
+                        globalState.lastUpdate = null;
+                        updateUI();
+                        updateSourceBar();
+                        alert('Datos eliminados.');
+                    };
+                    document.head.appendChild(script);
+                    setTimeout(() => {
+                        if (window._clearCallback) {
+                            delete window._clearCallback;
+                            if (script.parentNode) script.parentNode.removeChild(script);
+                            alert('Error: No se pudo conectar con Google Sheets para borrar los datos.\n\nVerifica que el Apps Script esté desplegado correctamente.');
+                        }
+                        showLoading(false);
+                    }, 15000);
+                    return;
+                } catch (e2) {
+                    alert('Error al conectar con Google Sheets: ' + error.message + '\n\nVerifica que el Apps Script esté desplegado correctamente.');
+                }
+            }
+            showLoading(false);
+        }
+
+        function handleStudentCSVImport(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    globalState.studentData = parseStudentCSV(e.target.result);
+                    globalState.dataSource = 'live';
+                    globalState.lastUpdate = new Date();
+                    updateUI();
+                    updateSourceBar();
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function handleAlumniCSVImport(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    globalState.alumniData = parseAlumniCSV(e.target.result);
+                    globalState.dataSource = 'live';
+                    globalState.lastUpdate = new Date();
+                    updateUI();
+                    updateSourceBar();
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // ============================================================================
+        // SOURCE BAR AND LOADING
+        // ============================================================================
+
+        function updateSourceBar() {
+            const indicator = document.getElementById('sourceIndicator');
+            const text = document.getElementById('sourceText');
+
+            indicator.className = 'source-indicator ' + globalState.dataSource;
+
+            if (globalState.dataSource === 'live') {
+                const updated = globalState.lastUpdate.toLocaleTimeString('es-ES', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                text.innerHTML = `<strong>Datos en vivo desde Google Sheets</strong> — Actualizado: ${updated} | ${globalState.studentData.length} alumnos, ${globalState.alumniData.length} exalumnos (total) | Auto-refresh cada 5 min`;
+            } else if (globalState.dataSource === 'empty') {
+                text.innerHTML = `<strong>Sin datos</strong> — Las hojas de Google Sheets están vacías. Usa 'Datos Demo' para generar datos de prueba o espera respuestas reales desde los formularios.`;
+            } else if (globalState.dataSource === 'demo') {
+                text.innerHTML = `<strong>Datos de demostración</strong> — Haz clic en 'Actualizar Datos' para cargar datos reales desde Google Sheets`;
+            } else if (globalState.dataSource === 'error') {
+                text.innerHTML = `<strong>Error al cargar datos</strong> — No se pudo conectar con Google Sheets. Verifica la conexión e intenta de nuevo.`;
+            } else {
+                text.innerHTML = `<strong>Cargando datos...</strong>`;
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingOverlay').classList.toggle('active', show);
+        }
+
+        // ============================================================================
+        // AUTO REFRESH
+        // ============================================================================
+
+        function setAutoRefresh() {
+            if (globalState.autoRefreshTimer) {
+                clearInterval(globalState.autoRefreshTimer);
+            }
+
+            if (globalState.dataSource === 'live') {
+                globalState.autoRefreshTimer = setInterval(() => {
+                    console.log('Auto-refreshing data...');
+                    fetchFromSheets();
+                }, CONFIG.AUTO_REFRESH_INTERVAL);
+            }
+        }
+
+        // ============================================================================
+        // INITIALIZATION
+        // ============================================================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Dashboard initialized');
+            fetchFromSheets();
+        });
+
+        window.addEventListener('unload', () => {
+            if (globalState.autoRefreshTimer) {
+                clearInterval(globalState.autoRefreshTimer);
+            }
+        });
+    </script>
+</body>
+</html>
